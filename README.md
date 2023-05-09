@@ -356,3 +356,102 @@ Apr 21 16:17:01 thiago-pc CRON[3039]: (root) CMD (   cd / && run-parts --report 
 Apr 21 17:17:01 thiago-pc CRON[3331]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
 grep: (standard input): binary file matches
 ```
+# Visualizando os logs em tempo real
+
+## Log de autenticação (/var/log/auth.log)
+O arquivo `/var/log/auth.log` contém o log de autenticação no Linux.
+
+Comando para exibir histórico de sessões SSH :
+```bash
+thiago@thiago-pc:/var/log$ strings auth.log | grep -i ssh
+Apr 20 16:35:08 thiago-pc sshd[783]: Server listening on 0.0.0.0 port 22.
+Apr 20 16:35:08 thiago-pc sshd[783]: Server listening on :: port 22.
+Apr 20 16:35:21 thiago-pc sshd[783]: Received signal 15; terminating.
+...
+May  9 15:38:30 thiago-pc sshd[5220]: pam_unix(sshd:session): session opened for user thiago(uid=1000) by (uid=0)
+May  9 18:30:57 thiago-pc sshd[708]: Server listening on 0.0.0.0 port 22.
+May  9 18:30:57 thiago-pc sshd[708]: Server listening on :: port 22.
+May  9 20:52:03 thiago-pc sshd[718]: Server listening on 0.0.0.0 port 22.
+May  9 20:52:03 thiago-pc sshd[718]: Server listening on :: port 22.
+May  9 20:54:52 thiago-pc sshd[1033]: Connection reset by 172.21.128.1 port 53701 [preauth]
+May  9 20:55:00 thiago-pc sshd[1035]: Accepted password for thiago from 172.21.128.1 port 53702 ssh2
+May  9 20:55:00 thiago-pc sshd[1035]: pam_unix(sshd:session): session opened for user thiago(uid=1000) by (uid=0)
+thiago@thiago-pc:/var/log$
+```
+> Perceba que o comando usado foi `strings`, não `cat`. Isso foi necessário porque algumas vezes o arquivo `auth.log` é interpretado como binário, o que impede a concatenação com `cat`. Exemplo:
+> ```
+> thiago@thiago-pc:/var/log$ cat auth.log | grep -i ssh
+> grep: (standard input): binary file matches
+> thiago@thiago-pc:/var/log$
+> ```
+
+Buscando as 6 últimas saídas referentes a SSH (note que há um registro de tentativa falha de autenticação do usuário `joao`):
+```
+thiago@thiago-pc:/var/log$ strings auth.log | grep -i ssh | tail -6
+May  9 20:55:00 thiago-pc sshd[1035]: pam_unix(sshd:session): session opened for user thiago(uid=1000) by (uid=0)
+May  9 22:53:33 thiago-pc sshd[1407]: Invalid user joao from 172.21.128.1 port 54304
+May  9 22:53:35 thiago-pc sshd[1407]: pam_unix(sshd:auth): check pass; user unknown
+May  9 22:53:35 thiago-pc sshd[1407]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=172.21.128.1
+May  9 22:53:37 thiago-pc sshd[1407]: Failed password for invalid user joao from 172.21.128.1 port 54304 ssh2
+May  9 22:53:40 thiago-pc sshd[1407]: Connection reset by invalid user joao 172.21.128.1 port 54304 [preauth]
+thiago@thiago-pc:/var/log$
+```
+## Exibição de conteúdo de arquivo em realtime com o comando `tail -f`
+O comando `tail -f` mostra o conteúdo do arquivo na tela, e qualquer atualização sobre ele aparece em tempo real.
+
+No exemplo abaixo, o terminal exibe duas tentativas de autenticação falhas com os usuários `zina` e `blaha`:
+```bash
+thiago@thiago-pc:/var/log$ tail -f auth.log
+May  9 22:30:01 thiago-pc sudo: pam_unix(sudo:session): session opened for user root(uid=0) by thiago(uid=1000)
+May  9 22:30:01 thiago-pc sudo: pam_unix(sudo:session): session closed for user root
+May  9 22:30:16 thiago-pc sudo:   thiago : TTY=pts/0 ; PWD=/var/log ; USER=root ; COMMAND=/usr/bin/dmesg
+May  9 22:30:16 thiago-pc sudo: pam_unix(sudo:session): session opened for user root(uid=0) by thiago(uid=1000)
+May  9 22:30:16 thiago-pc sudo: pam_unix(sudo:session): session closed for user root
+May  9 22:53:33 thiago-pc sshd[1407]: Invalid user joao from 172.21.128.1 port 54304
+May  9 22:53:35 thiago-pc sshd[1407]: pam_unix(sshd:auth): check pass; user unknown
+May  9 22:53:35 thiago-pc sshd[1407]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=172.21.128.1
+May  9 22:53:37 thiago-pc sshd[1407]: Failed password for invalid user joao from 172.21.128.1 port 54304 ssh2
+May  9 22:53:40 thiago-pc sshd[1407]: Connection reset by invalid user joao 172.21.128.1 port 54304 [preauth]
+May  9 23:00:17 thiago-pc sshd[1443]: Invalid user zina from 172.21.128.1 port 54408
+May  9 23:00:39 thiago-pc sshd[1443]: Connection reset by invalid user zina 172.21.128.1 port 54408 [preauth]
+May  9 23:00:52 thiago-pc sshd[1445]: Invalid user blaha from 172.21.128.1 port 54409
+May  9 23:00:54 thiago-pc sshd[1445]: Connection reset by invalid user blaha 172.21.128.1 port 54409 [preauth]
+May  9 23:03:58 thiago-pc sshd[1449]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=172.21.128.1  user=thiago
+May  9 23:04:00 thiago-pc sshd[1449]: Failed password for thiago from 172.21.128.1 port 54434 ssh2
+May  9 23:04:02 thiago-pc sshd[1449]: Connection reset by authenticating user thiago 172.21.128.1 port 54434 [preauth]
+```
+> Note que a saída tem 17 linhas, mas o comando tail por padrão exibe as 10 últimas linhas. As 4 linhas a mais são resultado das duas tentativas de login com usuários inexistentes, e as 3 últimas linhas se referem a uma senha inválida.
+
+## O arquivo /etc/logrotate.conf
+O arquivo `/etc/logrotate.conf` contém configurações para rotações de logs.
+```bash
+thiago@thiago-pc:/var/log$ cat /etc/logrotate.conf
+# see "man logrotate" for details
+
+# global options do not affect preceding include directives
+
+# rotate log files weekly
+weekly
+
+# use the adm group by default, since this is the owning group
+# of /var/log/syslog.
+su root adm
+
+# keep 4 weeks worth of backlogs
+rotate 4
+
+# create new (empty) log files after rotating old ones
+create
+
+# use date as a suffix of the rotated file
+#dateext
+
+# uncomment this if you want your log files compressed
+#compress
+
+# packages drop log rotation information into this directory
+include /etc/logrotate.d
+
+# system-specific logs may also be configured here.
+```
+> Note que o arquivo sugere a leitura do manual do comando `logrotate`, o qual pode modificar essas configurações.
