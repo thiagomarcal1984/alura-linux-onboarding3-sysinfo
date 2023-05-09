@@ -455,3 +455,70 @@ include /etc/logrotate.d
 # system-specific logs may also be configured here.
 ```
 > Note que o arquivo sugere a leitura do manual do comando `logrotate`, o qual pode modificar essas configurações.
+
+# Listando processos com o PS e o Top
+O comando `ps` (Process Status ou Process Snapshots) mostra informações sobre os processos em execução no Linux.
+
+Alguns parâmetros do comando `ps`:
+|Parâmetro|Função|
+|---|---|
+|`-A` ou `-e`|Seleciona todos os processos.|
+|`-f`|Exibe a saída em formato de lista completa.|
+
+Exemplo de saída completa do comando `ps -ef | head`:
+```bash
+thiago@thiago-pc:/var/log$ ps -ef | head
+UID          PID    PPID  C STIME TTY          TIME CMD
+root           1       0  0 21:20 ?        00:00:03 /sbin/init
+root           2       0  0 21:20 ?        00:00:00 [kthreadd]
+root           3       2  0 21:20 ?        00:00:00 [rcu_gp]
+root           4       2  0 21:20 ?        00:00:00 [rcu_par_gp]
+root           5       2  0 21:20 ?        00:00:00 [slub_flushwq]
+root           6       2  0 21:20 ?        00:00:00 [netns]
+root           8       2  0 21:20 ?        00:00:00 [kworker/0:0H-events_highpri]
+root          10       2  0 21:20 ?        00:00:00 [mm_percpu_wq]
+root          11       2  0 21:20 ?        00:00:00 [rcu_tasks_rude_]
+```
+Os campos exibidos com o `ps -ef`:
+|Campo|Função|
+|---|---|
+|UID|Nome do usuário que é o dono do processo.|
+|PID|Identificação do Processo.|
+|PPID|Parent PID, processo pai.|
+|CMD|Comando executado.|
+
+Exemplo de saída do comando `ps aux | head`:
+```bash
+thiago@thiago-pc:/var/log$ ps aux | head
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.5 100788 11660 ?        Ss   21:20   0:03 /sbin/init
+root           2  0.0  0.0      0     0 ?        S    21:20   0:00 [kthreadd]
+root           3  0.0  0.0      0     0 ?        I<   21:20   0:00 [rcu_gp]
+root           4  0.0  0.0      0     0 ?        I<   21:20   0:00 [rcu_par_gp]
+root           5  0.0  0.0      0     0 ?        I<   21:20   0:00 [slub_flushwq]
+root           6  0.0  0.0      0     0 ?        I<   21:20   0:00 [netns]
+root           8  0.0  0.0      0     0 ?        I<   21:20   0:00 [kworker/0:0H-events_highpri]
+root          10  0.0  0.0      0     0 ?        I<   21:20   0:00 [mm_percpu_wq]
+root          11  0.0  0.0      0     0 ?        S    21:20   0:00 [rcu_tasks_rude_]
+```
+Os campos exibidos com o `ps aux` (sem o hifen):
+|Campo|Função|
+|---|---|
+|UID|Nome do usuário que é o dono do processo.|
+|PID|Identificação do Processo.|
+|%CPU|Percentual de consumo de CPU.|
+|%MEM|Percentual de consumo de memória.|
+|CMD|Comando executado.|
+
+## O comando `top`
+O comando `top` exibe os processos executados em tempo real. É diferente do comando `ps`, que mostra um instantâneo dos processos.
+
+Alguns atalhos para modificar a exibição do comando `top`:
+|Tecla|Função|
+|---|---|
+|`P`|Ordena os processos por consumo de CPU.|
+|`M`|Ordena os processos por consumo de memória.|
+|`N`|Ordena os processos por número de PID.|
+|`T`|Ordena os processos pelo tempo de execução.|
+|`h`|Exibe a ajuda do comando.|
+|`q`|Sai do comando.|
