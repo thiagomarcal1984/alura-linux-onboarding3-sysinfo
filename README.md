@@ -291,3 +291,32 @@ Outro exemplo, mesma pergunta, mas redirecionando para o comando `wc`:
 thiago@thiago-pc:~$ cat /proc/cpuinfo | grep processor | wc -l
 2
 ```
+
+# Dispositivos de blocos (Discos)
+As informações dos dispositivos (devices) estão armazenadas no diretório `/dev`.
+
+Quando usamos o comando `ls /dev -l`, nós listamos o diretório `/dev` de forma longa. Note que o primeiro caracter de cada arquivo da pasta `/dev` varia para c (character), b (block) etc.
+
+Exemplo: para visualizarmos o primeiro HD Sata disponível no computador e suas partições, usamos o comando:
+
+```bash
+thiago@thiago-pc:~$ ls /dev/ -l | grep sda
+brw-rw----  1 root   disk      8,   0 mai  9 20:49 sda
+brw-rw----  1 root   disk      8,   1 mai  9 20:49 sda1
+brw-rw----  1 root   disk      8,   2 mai  9 20:49 sda2
+brw-rw----  1 root   disk      8,   3 mai  9 20:49 sda3
+```
+> Note que, depois de `sd`, a letra `a` corresponde à letra sequencial do disco, enquanto os números (1, 2, 3) representam as partições existentes. Se quisermos visualizar um segundo HD, executamos o comando `ls /dev -l sdb` e assim sucessivamente.
+
+## O comando df (disk free)
+O comando df -h exibe informações de disco (o parâmetro `-h` serve para mostrar informações legíveis para humanos):
+```bash
+thiago@thiago-pc:~$ df -h
+Filesystem                         Size  Used Avail Use% Mounted on
+tmpfs                              198M  1,1M  197M   1% /run
+/dev/mapper/ubuntu--vg-ubuntu--lv   12G  5,2G  5,6G  49% /
+tmpfs                              988M     0  988M   0% /dev/shm
+tmpfs                              5,0M     0  5,0M   0% /run/lock
+/dev/sda2                          2,0G  130M  1,7G   8% /boot
+tmpfs                              198M  4,0K  198M   1% /run/user/1000
+```
