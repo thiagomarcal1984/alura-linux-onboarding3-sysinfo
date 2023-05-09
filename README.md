@@ -320,3 +320,39 @@ tmpfs                              5,0M     0  5,0M   0% /run/lock
 /dev/sda2                          2,0G  130M  1,7G   8% /boot
 tmpfs                              198M  4,0K  198M   1% /run/user/1000
 ```
+# Principais arquivos de log do sistema
+Os logs geralmente ficam guardados no diretório `/var/log`.
+
+## O comando dmesg
+O comando `dmesg` mostra informações de inicialização do sistema (as mesmas informações que aparecem durante o boot). 
+
+O comando a seguir confirma se o HD sda foi montado:
+```
+thiago@thiago-pc:/var/log$ sudo dmesg | grep sda
+[    5.576852] sd 2:0:0:0: [sda] 52428800 512-byte logical blocks: (26.8 GB/25.0 GiB)
+[    5.581159] sd 2:0:0:0: [sda] Write Protect is off
+[    5.583710] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    5.586883] sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    5.725931]  sda: sda1 sda2 sda3
+[    5.818590] sd 2:0:0:0: [sda] Attached SCSI disk
+[   11.018847] EXT4-fs (sda2): mounted filesystem with ordered data mode. Opts: (null). Quota mode: none.
+```
+## O arquivo /var/log/syslog
+O arquivo `/var/log/syslog` (no amibente Red Hat o arquivo se chama `/var/log/messages`) mostra o log das saídas associadas ao kernel do Linux.
+
+Exemplo de comando para visualizar as tarefas agendadas no Linux (busca por cron):
+```bash
+thiago@thiago-pc:/var/log$ cat syslog | grep -i CRON
+Apr 20 16:35:06 thiago-pc cron[664]: (CRON) INFO (pidfile fd = 3)
+Apr 20 16:35:06 thiago-pc cron[664]: (CRON) INFO (Running @reboot jobs)
+Apr 20 18:32:06 thiago-pc cron[649]: (CRON) INFO (pidfile fd = 3)
+Apr 20 18:32:06 thiago-pc cron[649]: (CRON) INFO (Running @reboot jobs)
+Apr 20 19:17:01 thiago-pc CRON[1723]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+Apr 20 20:17:01 thiago-pc CRON[2022]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+Apr 20 21:17:01 thiago-pc CRON[2282]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+Apr 21 12:17:02 thiago-pc CRON[2555]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+Apr 21 15:17:01 thiago-pc CRON[2878]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+Apr 21 16:17:01 thiago-pc CRON[3039]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+Apr 21 17:17:01 thiago-pc CRON[3331]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+grep: (standard input): binary file matches
+```
