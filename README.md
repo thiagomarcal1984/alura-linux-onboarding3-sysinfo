@@ -520,5 +520,35 @@ Alguns atalhos para modificar a exibição do comando `top`:
 |`M`|Ordena os processos por consumo de memória.|
 |`N`|Ordena os processos por número de PID.|
 |`T`|Ordena os processos pelo tempo de execução.|
+|`L`|Permite filtrar os processos por uma string a ser informada (ex.: Apache).|
 |`h`|Exibe a ajuda do comando.|
 |`q`|Sai do comando.|
+
+# Monitorando processos em tempo real
+Instalando o Apache no Ubuntu:
+```
+ sudo apt install apache2
+ ```
+
+> Instalando o Apache em distribuições Red Hat:
+> ```
+> sudo yum install httpd
+> ```
+
+Confirmando se o Apache está funcionando (Ubuntu):
+```
+sudo service apache2 status
+```
+
+Comando no shell para disparar várias requisições e estressar o servidor Apache:
+```
+thiago@thiago-pc:~$ while :; do curl -l http://172.21.128.215; done
+```
+> O comando `while :; do curl -l http://172.21.128.215; done` na verdade é um loop infinito feito em uma linha. Cada ponto-e-vírgula representaria uma quebra de linha para manter conformidade com a sintaxe do shell.
+> ```
+> while :
+>   do curl -l http://172.21.128.215
+> done
+> ```
+
+Execute o comando `top` e depois pesquise por `apache` usando a tecla `L`. Depois pare as requisições feitas pelo loop infinito e compare o consumo de memória.
