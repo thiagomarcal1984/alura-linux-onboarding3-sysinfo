@@ -770,3 +770,27 @@ thiago@thiago-pc:~$ sudo cat /etc/shadow | grep root
 root::19487:0:99999:7:::
 ```
 > Note que o usuário root não tem senha (por isso está vazio entre os dois pontos depois do nome de usuário root).Os números que aparecem em seguida tem relação com tempo de expiração da senha.
+
+# Usuários do sistema
+Vamos comparar os usuários `thiago` e `www-data` (o dono do serviço do Apache):
+```
+thiago@thiago-pc:~$ grep www-data /etc/passwd
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+
+thiago@thiago-pc:~$ grep thiago /etc/passwd
+thiago:x:1000:1000:Thiago:/home/thiago:/bin/bash
+thiago@thiago-pc:~$
+```
+> Note que o usuário `www-data` usa o shell `/usr/sbin/nologin`: ele não pode usar o shell. Os usuários comuns tem ID igual ou superior a 1000, enquanto os usuários de sistema tem ID inferior a mil.
+
+Usuários sem bash associado não podem se autenticar:
+
+```
+thiago@thiago-pc:~$ su - www-data
+Password:
+su: Authentication failure
+thiago@thiago-pc:~$ su www-data
+Password:
+su: Authentication failure
+thiago@thiago-pc:~$
+```
