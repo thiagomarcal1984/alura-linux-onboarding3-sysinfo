@@ -664,3 +664,61 @@ systemd─┬─ModemManager───2*[{ModemManager}]
         └─upowerd───2*[{upowerd}]
 ```
 > Perceba que o daemon `sshd` tem duas sessões SSH, e uma delas contém o comando `pstree`.
+
+# Escalando privilégios com o Sudo
+O arquivo `/etc/sudoers` lista os usuários que tem permissão de usar o comando `sudo`. Esse arquivo pode ser editado usando o comando `sudo visudo` (no exemplo, o editor usado é o nano).
+
+Uma forma de verificar se o usuário atual é um sudoer é executando o comando `groups`:
+```bash
+thiago@thiago-pc:~$ groups
+thiago adm cdrom sudo dip plugdev lxd
+```
+> Note que o usuário thiago participa dos grupos `thiago` (mesmo que o nome do usuário), `adm` e `sudo`.
+
+O arquivo `/etc/groups` lista os grupos e para cada grupo os seus usuários são exibidos:
+
+``` bash
+thiago@thiago-pc:~$ cat /etc/group
+root:x:0:
+daemon:x:1:
+bin:x:2:
+sys:x:3:
+adm:x:4:syslog,thiago
+tty:x:5:
+disk:x:6:
+# ...
+voice:x:22:
+cdrom:x:24:thiago
+floppy:x:25:
+tape:x:26:
+sudo:x:27:thiago
+# ...
+thiago:x:1000:
+# ...
+```
+
+Filtrando com o grep:
+```
+thiago@thiago-pc:~$ cat /etc/group | grep thiago
+adm:x:4:syslog,thiago
+cdrom:x:24:thiago
+sudo:x:27:thiago
+dip:x:30:thiago
+plugdev:x:46:thiago
+lxd:x:110:thiago
+thiago:x:1000:
+```
+> O comando usado para saber os grupos ao qual o usuário corrente pertence é `groups` no plural; o arquivo `/etc/group` está no singular.
+
+O comando `su` serve para trocar de usuário no terminal:
+```
+thiago@thiago-pc:~$ sudo su
+[sudo] password for thiago:
+root@thiago-pc:/home/thiago#
+```
+```
+thiago@thiago-pc:/var/log$ sudo su
+[sudo] password for thiago:
+root@thiago-pc:/var/log#
+```
+> Note que o cifrão foi substituído por tralha. A tralha indica que o usuário é privilegiado, enquanto o cifrão indica que o usuário não é privilegiado.
