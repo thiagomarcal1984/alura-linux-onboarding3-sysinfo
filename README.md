@@ -552,3 +552,115 @@ thiago@thiago-pc:~$ while :; do curl -l http://172.21.128.215; done
 > ```
 
 Execute o comando `top` e depois pesquise por `apache` usando a tecla `L`. Depois pare as requisições feitas pelo loop infinito e compare o consumo de memória.
+
+# Gerenciando processos com o Kill
+O comando `kill` manda sinais para os processos. Informando o parâmetro `-l` vemos quais os tipos de sinais possíveis:
+```bash
+thiago@thiago-pc:/var/log$ kill -l
+ 1) SIGHUP       2) SIGINT       3) SIGQUIT      4) SIGILL       5) SIGTRAP
+ 6) SIGABRT      7) SIGBUS       8) SIGFPE       9) SIGKILL     10) SIGUSR1
+11) SIGSEGV     12) SIGUSR2     13) SIGPIPE     14) SIGALRM     15) SIGTERM
+16) SIGSTKFLT   17) SIGCHLD     18) SIGCONT     19) SIGSTOP     20) SIGTSTP
+21) SIGTTIN     22) SIGTTOU     23) SIGURG      24) SIGXCPU     25) SIGXFSZ
+26) SIGVTALRM   27) SIGPROF     28) SIGWINCH    29) SIGIO       30) SIGPWR
+31) SIGSYS      34) SIGRTMIN    35) SIGRTMIN+1  36) SIGRTMIN+2  37) SIGRTMIN+3
+38) SIGRTMIN+4  39) SIGRTMIN+5  40) SIGRTMIN+6  41) SIGRTMIN+7  42) SIGRTMIN+8
+43) SIGRTMIN+9  44) SIGRTMIN+10 45) SIGRTMIN+11 46) SIGRTMIN+12 47) SIGRTMIN+13
+48) SIGRTMIN+14 49) SIGRTMIN+15 50) SIGRTMAX-14 51) SIGRTMAX-13 52) SIGRTMAX-12
+53) SIGRTMAX-11 54) SIGRTMAX-10 55) SIGRTMAX-9  56) SIGRTMAX-8  57) SIGRTMAX-7
+58) SIGRTMAX-6  59) SIGRTMAX-5  60) SIGRTMAX-4  61) SIGRTMAX-3  62) SIGRTMAX-2
+```
+> Repare que o sinal SIGKILL (número 9) é o que força a interrupção dos processos.
+> `O sinal SIGTERM (número 15) é o sinal default`. Ele termina o processo, mas antes realiza algumas tarefas prévias (importante para commitar gravações em bancos de dados, por exemplo).
+
+Exemplo prático:
+1. Rode o comando ping em loopback (`ping localhost`) num terminal à parte;
+2. Em outro terminal, identifique o processo com `ps aux`;
+3. Mande o sinal SIGKILL (9) para o comando de ping (`kill -9 <PID>`)
+```bash
+# Identificando o processo que executa o ping (no caso, o PID dele é 10854)
+thiago@thiago-pc:/var/log$ ps aux | grep -i ping
+thiago     10854  0.0  0.0   7716  1316 pts/1    S+   00:16   0:00 ping localhost
+thiago     10870  0.0  0.1   6608  2396 pts/0    S+   00:24   0:00 grep --color=auto -i ping
+# Identificando os campos usando ps aux | head
+thiago@thiago-pc:/var/log$ ps aux | head
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.6 102236 13232 ?        Ss   mai09   0:05 /sbin/init
+...
+
+# Matando o processo de ping.
+thiago@thiago-pc:/var/log$ kill -9 10854
+
+# Confirmando que o processo morreu.
+thiago@thiago-pc:/var/log$ ps aux | grep -i ping
+thiago     10874  0.0  0.1   6608  2412 pts/0    S+   00:24   0:00 grep --color=auto -i ping
+# Note que a única linha do ping se refere ao comando `grep`, não ao ping realizado por outro terminal.
+# Se você for ao terminal que executou o ping, ele vai mostrar a mensagem `Killed`.
+thiago@thiago-pc:/var/log$
+```
+
+Outro exemplo, matando uma sessão SSH:
+1. Rode o comando ping em loopback (`ping localhost`) num terminal à parte;
+2. Em outro terminal, identifique o processo `ssh` com o PID mais alto (mais novo) usando `ps -ef`;
+3. Mande um sinal SIGTERM (15) para o PPID que controla a sessão SSH (`kill -15 <PPID>`).
+```bash
+# Identificando o PID mais recente para sessão SSH.
+# Repare que a sessão mais nova é representada pelo PPID 2646.
+thiago@thiago-pc:/var/log$ ps -ef | grep -i ssh
+root         718       1  0 mai09 ?        00:00:00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+root        1035     718  0 mai09 ?        00:00:00 sshd: thiago [priv]
+thiago      1098    1035  0 mai09 ?        00:00:05 sshd: thiago@pts/0
+root        2646     718  0 00:05 ?        00:00:00 sshd: thiago [priv]
+thiago      2745    2646  0 00:05 ?        00:00:13 sshd: thiago@pts/1
+thiago     10879    1099  0 00:29 pts/0    00:00:00 grep --color=auto -i ssh
+
+# Termine com a sessão SSH enviando o sinal 15:
+thiago@thiago-pc:/var/log$ sudo kill -15 2646
+[sudo] password for thiago:
+
+# Conferindo se o processo terminou.
+thiago@thiago-pc:/var/log$ ps -ef | grep -i ssh
+root         718       1  0 mai09 ?        00:00:00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+root        1035     718  0 mai09 ?        00:00:00 sshd: thiago [priv]
+thiago      1098    1035  0 mai09 ?        00:00:05 sshd: thiago@pts/0
+thiago     10886    1099  0 00:34 pts/0    00:00:00 grep --color=auto -i ssh
+
+# Note que a saída do terminal afetado exibiu algumas mensagens que confirmaram
+# o término suave da sessão:
+# Connection to 172.21.128.215 closed by remote host.
+# Connection to 172.21.128.215 closed.
+thiago@thiago-pc:/var/log$
+```
+## O comando pstree
+O comando `pstree` exibe os processos em formato de árvore:
+
+```bash
+thiago@thiago-pc:/var/log$ pstree
+systemd─┬─ModemManager───2*[{ModemManager}]
+        ├─apache2───2*[apache2───26*[{apache2}]]
+        ├─cron
+        ├─dbus-daemon
+        ├─fwupd───4*[{fwupd}]
+        ├─htcacheclean
+        ├─irqbalance───{irqbalance}
+        ├─login───bash
+        ├─multipathd───6*[{multipathd}]
+        ├─networkd-dispat
+        ├─packagekitd───2*[{packagekitd}]
+        ├─polkitd───2*[{polkitd}]
+        ├─rsyslogd───3*[{rsyslogd}]
+        ├─snapd───10*[{snapd}]
+        ├─sshd─┬─sshd───sshd───bash───pstree
+        │      └─sshd───sshd───bash
+        ├─systemd───(sd-pam)
+        ├─systemd-journal
+        ├─systemd-logind
+        ├─systemd-network
+        ├─systemd-resolve
+        ├─systemd-timesyn───{systemd-timesyn}
+        ├─systemd-udevd
+        ├─udisksd───4*[{udisksd}]
+        ├─unattended-upgr───{unattended-upgr}
+        └─upowerd───2*[{upowerd}]
+```
+> Perceba que o daemon `sshd` tem duas sessões SSH, e uma delas contém o comando `pstree`.
