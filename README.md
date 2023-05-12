@@ -722,3 +722,51 @@ thiago@thiago-pc:/var/log$ sudo su
 root@thiago-pc:/var/log#
 ```
 > Note que o cifrão foi substituído por tralha. A tralha indica que o usuário é privilegiado, enquanto o cifrão indica que o usuário não é privilegiado.
+
+# Diferenças entre o root e os demais usuários
+O comando `passwd` serve para mudar a senha do usuário atual:
+```
+thiago@thiago-pc:~$ passwd
+Changing password for thiago.
+Current password:
+New password:
+Retype new password:
+passwd: password updated successfully
+```
+
+Definindo a senha do usuário root:
+```
+thiago@thiago-pc:~$ sudo su
+root@thiago-pc:/home/thiago# passwd
+New password:
+Retype new password:
+passwd: password updated successfully
+root@thiago-pc:/home/thiago#
+```
+> Note o comando `sudo su` para forçar a mudança para o usuário root.
+
+Modificando o usuário `thiago` a partir do usuário `root`:
+```
+root@thiago-pc:/home/thiago# passwd thiago
+New password:
+Retype new password:
+passwd: password updated successfully
+root@thiago-pc:/home/thiago#
+```
+> Note que, ao usarmos o usuário `root` para mudar a senha, não é necessário informar a senha antiga do usuário `thiago`.
+
+O arquivo `/etc/passwd` contém os usuários criados no sistema:
+```
+thiago@thiago-pc:~$ cat /etc/passwd | grep thiago
+thiago:x:1000:1000:Thiago:/home/thiago:/bin/bash
+```
+> Note que no fim de cada linha os dois últimos campos são o diretório home do usuário e o bash/terminal que ele usa. Note também que a senha não está presente no arquivo /etc/passwd.
+
+O arquivo `/etc/shadow` contém o hash calculado a partir da senha. Quando o usuário informa a senha, o Linux gera o hash da senha e compara com o que está guardado no arquivo `/etc/shadow`:
+```
+thiago@thiago-pc:~$ sudo cat /etc/shadow | grep thiago
+thiago:$y$j9T$vLBito6FAioyIWXF53UzP0$B4rTIqADEMAu8Mkbz.Jad2/VMsxjeLg1HdAhioyTj51:19487:0:99999:7:::
+thiago@thiago-pc:~$ sudo cat /etc/shadow | grep root
+root::19487:0:99999:7:::
+```
+> Note que o usuário root não tem senha (por isso está vazio entre os dois pontos depois do nome de usuário root).Os números que aparecem em seguida tem relação com tempo de expiração da senha.
